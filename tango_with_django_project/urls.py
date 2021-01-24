@@ -17,10 +17,11 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 from rango import views
+from django.conf import settings 
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('rango/', include('rango.urls')), #any url that is about rango get handed over to rango project 
-    path('admin/', admin.site.urls),       #handled by the urls file in tango with django 
-    
-]
+    path('admin/', admin.site.urls),       #handled by the urls file in tango with django  
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
