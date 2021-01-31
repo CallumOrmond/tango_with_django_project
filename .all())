@@ -1,0 +1,269 @@
+[1mdiff --git a/rango/tests_chapter4.py b/rango/tests_chapter4.py[m
+[1mdeleted file mode 100644[m
+[1mindex d21c499..0000000[m
+[1m--- a/rango/tests_chapter4.py[m
+[1m+++ /dev/null[m
+[36m@@ -1,262 +0,0 @@[m
+[31m-# [m
+[31m-# Tango with Django 2 Progress Tests[m
+[31m-# By Leif Azzopardi and David Maxwell[m
+[31m-# With assistance from Enzo Roiz (https://github.com/enzoroiz)[m
+[31m-# [m
+[31m-# Chapter 4 -- Templates and Media Files[m
+[31m-# Last updated January 25th, 2020[m
+[31m-# Revising Author: David Maxwell[m
+[31m-# [m
+[31m-[m
+[31m-#[m
+[31m-# In order to run these tests, copy this module to your tango_with_django_project/rango/ directory.[m
+[31m-# Once this is complete, run $ python manage.py test rango.tests_chapter4[m
+[31m-# [m
+[31m-# The tests will then be run, and the output displayed -- do you pass them all?[m
+[31m-# [m
+[31m-# Once you are done with the tests, delete the module. You don't need to put it in your Git repository![m
+[31m-#[m
+[31m-[m
+[31m-import os[m
+[31m-import re[m
+[31m-import importlib[m
+[31m-from django.urls import reverse[m
+[31m-from django.test import TestCase[m
+[31m-from django.conf import settings[m
+[31m-[m
+[31m-FAILURE_HEADER = f"{os.linesep}{os.linesep}{os.linesep}================{os.linesep}TwD TEST FAILURE =({os.linesep}================{os.linesep}"[m
+[31m-FAILURE_FOOTER = f"{os.linesep}"[m
+[31m-[m
+[31m-class Chapter4TemplatesStructureTests(TestCase):[m
+[31m-    """[m
+[31m-    Have you set templates, static files and media files up correctly, as per the book?[m
+[31m-    """[m
+[31m-    def setUp(self):[m
+[31m-        self.project_base_dir = os.getcwd()[m
+[31m-        self.templates_dir = os.path.join(self.project_base_dir, 'templates')[m
+[31m-        self.rango_templates_dir = os.path.join(self.templates_dir, 'rango')[m
+[31m-    [m
+[31m-    def test_templates_directory_exists(self):[m
+[31m-        """[m
+[31m-        Does the templates/ directory exist?[m
+[31m-        """[m
+[31m-        directory_exists = os.path.isdir(self.templates_dir)[m
+[31m-        self.assertTrue(directory_exists, f"{FAILURE_HEADER}Your project's templates directory does not exist.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_rango_templates_directory_exists(self):[m
+[31m-        """[m
+[31m-        Does the templates/rango/ directory exist?[m
+[31m-        """[m
+[31m-        directory_exists = os.path.isdir(self.rango_templates_dir)[m
+[31m-        self.assertTrue(directory_exists, f"{FAILURE_HEADER}The Rango templates directory does not exist.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_template_dir_setting(self):[m
+[31m-        """[m
+[31m-        Does the TEMPLATE_DIR setting exist, and does it point to the right directory?[m
+[31m-        """[m
+[31m-        variable_exists = 'TEMPLATE_DIR' in dir(settings)[m
+[31m-        self.assertTrue(variable_exists, f"{FAILURE_HEADER}Your settings.py module does not have the variable TEMPLATE_DIR defined!{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        template_dir_value = os.path.normpath(settings.TEMPLATE_DIR)[m
+[31m-        template_dir_computed = os.path.normpath(self.templates_dir)[m
+[31m-        self.assertEqual(template_dir_value, template_dir_computed, f"{FAILURE_HEADER}Your TEMPLATE_DIR setting does not point to the expected path. Check your configuration, and try again.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_template_lookup_path(self):[m
+[31m-        """[m
+[31m-        Does the TEMPLATE_DIR value appear within the lookup paths for templates?[m
+[31m-        """[m
+[31m-        lookup_list = settings.TEMPLATES[0]['DIRS'][m
+[31m-        found_path = False[m
+[31m-        [m
+[31m-        for entry in lookup_list:[m
+[31m-            entry_normalised = os.path.normpath(entry)[m
+[31m-            [m
+[31m-            if entry_normalised == os.path.normpath(settings.TEMPLATE_DIR):[m
+[31m-                found_path = True[m
+[31m-        [m
+[31m-        self.assertTrue(found_path, f"{FAILURE_HEADER}Your project's templates directory is not listed in the TEMPLATES>DIRS lookup list. Check your settings.py module.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_templates_exist(self):[m
+[31m-        """[m
+[31m-        Do the index.html and about.html templates exist in the correct place?[m
+[31m-        """[m
+[31m-        index_path = os.path.join(self.rango_templates_dir, 'index.html')[m
+[31m-        about_path = os.path.join(self.rango_templates_dir, 'about.html')[m
+[31m-        [m
+[31m-        self.assertTrue(os.path.isfile(index_path), f"{FAILURE_HEADER}Your index.html template does not exist, or is in the wrong location.{FAILURE_FOOTER}")[m
+[31m-        self.assertTrue(os.path.isfile(about_path), f"{FAILURE_HEADER}Your about.html template does not exist, or is in the wrong location.{FAILURE_FOOTER}")[m
+[31m-[m
+[31m-[m
+[31m-class Chapter4IndexPageTests(TestCase):[m
+[31m-    """[m
+[31m-    A series of tests to ensure that the index page/view has been updated to work with templates.[m
+[31m-    Image tests are in the Chapter4StaticMediaTests suite.[m
+[31m-    """[m
+[31m-    def setUp(self):[m
+[31m-        self.response = self.client.get(reverse('rango:index'))[m
+[31m-    [m
+[31m-    def test_index_uses_template(self):[m
+[31m-        """[m
+[31m-        Checks whether the index view uses a template -- and the correct one![m
+[31m-        """[m
+[31m-        self.assertTemplateUsed(self.response, 'rango/index.html', f"{FAILURE_HEADER}Your index() view does not use the expected index.html template.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_index_uses_context_dictionary(self):[m
+[31m-        """[m
+[31m-        Tests whether the index view uses the context dictionary correctly.[m
+[31m-        Crunchy, creamy cookie, anyone?[m
+[31m-        """[m
+[31m-        self.assertTrue('boldmessage' in self.response.context, f"{FAILURE_HEADER}In your index view, the context dictionary is not passing the boldmessage key. Check your context dictionary in the index() view, located in rango/views.py, and try again.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        message = self.response.context['boldmessage'][m
+[31m-        expected = 'Crunchy, creamy, cookie, candy, cupcake!'[m
+[31m-        self.assertEqual(message, expected,  f"{FAILURE_HEADER}The boldmessage being sent to the index.html template does not match what is expected. Check your index() view. Make sure you match up cases, and don't miss any punctuation! Even one missing character will cause the test to fail.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_index_starts_with_doctype(self):[m
+[31m-        """[m
+[31m-        Is the <!DOCTYPE html> declaration on the first line of the index.html template?[m
+[31m-        """[m
+[31m-        self.assertTrue(self.response.content.decode().startswith('<!DOCTYPE html>'), f"{FAILURE_HEADER}Your index.html template does not start with <!DOCTYPE html> -- this is requirement of the HTML specification.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_about_link_present(self):[m
+[31m-        """[m
+[31m-        Is the about hyperlink present and correct on the index.html template?[m
+[31m-        """[m
+[31m-        expected = "<a href=\"/rango/about/\">About</a><br />"[m
+[31m-        self.assertTrue(expected in self.response.content.decode(), f"{FAILURE_HEADER}Your index.html template doesn't contain the /rango/about/ link -- or it is not correct. Make sure you have the linebreak in, too!{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-[m
+[31m-class Chapter4StaticMediaTests(TestCase):[m
+[31m-    """[m
+[31m-    A series of tests to check whether static files and media files have been setup and used correctly.[m
+[31m-    Also tests for the two required files -- rango.jpg and cat.jpg.[m
+[31m-    """[m
+[31m-    def setUp(self):[m
+[31m-        self.project_base_dir = os.getcwd()[m
+[31m-        self.static_dir = os.path.join(self.project_base_dir, 'static')[m
+[31m-        self.media_dir = os.path.join(self.project_base_dir, 'media')[m
+[31m-    [m
+[31m-    def test_does_static_directory_exist(self):[m
+[31m-        """[m
+[31m-        Tests whether the static directory exists in the correct location -- and the images subdirectory.[m
+[31m-        Also checks for the presence of rango.jpg in the images subdirectory.[m
+[31m-        """[m
+[31m-        does_static_dir_exist = os.path.isdir(self.static_dir)[m
+[31m-        does_images_static_dir_exist = os.path.isdir(os.path.join(self.static_dir, 'images'))[m
+[31m-        does_rango_jpg_exist = os.path.isfile(os.path.join(self.static_dir, 'images', 'rango.jpg'))[m
+[31m-        [m
+[31m-        self.assertTrue(does_static_dir_exist, f"{FAILURE_HEADER}The static directory was not found in the expected location. Check the instructions in the book, and try again.{FAILURE_FOOTER}")[m
+[31m-        self.assertTrue(does_images_static_dir_exist, f"{FAILURE_HEADER}The images subdirectory was not found in your static directory.{FAILURE_FOOTER}")[m
+[31m-        self.assertTrue(does_rango_jpg_exist, f"{FAILURE_HEADER}We couldn't locate the rango.jpg image in the /static/images/ directory. If you think you've included the file, make sure to check the file extension. Sometimes, a JPG can have the extension .jpeg. Be careful! It must be .jpg for this test.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_does_media_directory_exist(self):[m
+[31m-        """[m
+[31m-        Tests whether the media directory exists in the correct location.[m
+[31m-        Also checks for the presence of cat.jpg.[m
+[31m-        """[m
+[31m-        does_media_dir_exist = os.path.isdir(self.media_dir)[m
+[31m-        does_cat_jpg_exist = os.path.isfile(os.path.join(self.media_dir, 'cat.jpg'))[m
+[31m-        [m
+[31m-        self.assertTrue(does_media_dir_exist, f"{FAILURE_HEADER}We couldn't find the /media/ directory in the expected location. Make sure it is in your project directory (at the same level as the manage.py module).{FAILURE_FOOTER}")[m
+[31m-        self.assertTrue(does_cat_jpg_exist, f"{FAILURE_HEADER}We couldn't find the cat.jpg image in /media/. Check the file extension; this is a common pitfall. It should .jpg. Not .png, .gif, or .jpeg!{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_static_and_media_configuration(self):[m
+[31m-        """[m
+[31m-        Performs a number of tests on your Django project's settings in relation to static files and user upload-able files..[m
+[31m-        """[m
+[31m-        static_dir_exists = 'STATIC_DIR' in dir(settings)[m
+[31m-        self.assertTrue(static_dir_exists, f"{FAILURE_HEADER}Your settings.py module does not have the variable STATIC_DIR defined.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        expected_path = os.path.normpath(self.static_dir)[m
+[31m-        static_path = os.path.normpath(settings.STATIC_DIR)[m
+[31m-        self.assertEqual(expected_path, static_path, f"{FAILURE_HEADER}The value of STATIC_DIR does not equal the expected path. It should point to your project root, with 'static' appended to the end of that.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        staticfiles_dirs_exists = 'STATICFILES_DIRS' in dir(settings)[m
+[31m-        self.assertTrue(staticfiles_dirs_exists, f"{FAILURE_HEADER}The required setting STATICFILES_DIRS is not present in your project's settings.py module. Check your settings carefully. So many students have mistyped this one.{FAILURE_FOOTER}")[m
+[31m-        self.assertEqual([static_path], settings.STATICFILES_DIRS, f"{FAILURE_HEADER}Your STATICFILES_DIRS setting does not match what is expected. Check your implementation against the instructions provided.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        staticfiles_dirs_exists = 'STATIC_URL' in dir(settings)[m
+[31m-        self.assertTrue(staticfiles_dirs_exists, f"{FAILURE_HEADER}The STATIC_URL variable has not been defined in settings.py.{FAILURE_FOOTER}")[m
+[31m-        self.assertEqual('/static/', settings.STATIC_URL, f"{FAILURE_HEADER}STATIC_URL does not meet the expected value of /static/. Make sure you have a slash at the end!{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        media_dir_exists = 'MEDIA_DIR' in dir(settings)[m
+[31m-        self.assertTrue(media_dir_exists, f"{FAILURE_HEADER}The MEDIA_DIR variable in settings.py has not been defined.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        expected_path = os.path.normpath(self.media_dir)[m
+[31m-        media_path = os.path.normpath(settings.MEDIA_DIR)[m
+[31m-        self.assertEqual(expected_path, media_path, f"{FAILURE_HEADER}The MEDIA_DIR setting does not point to the correct path. Remember, it should have an absolute reference to tango_with_django_project/media/.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        media_root_exists = 'MEDIA_ROOT' in dir(settings)[m
+[31m-        self.assertTrue(media_root_exists, f"{FAILURE_HEADER}The MEDIA_ROOT setting has not been defined.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        media_root_path = os.path.normpath(settings.MEDIA_ROOT)[m
+[31m-        self.assertEqual(media_path, media_root_path, f"{FAILURE_HEADER}The value of MEDIA_ROOT does not equal the value of MEDIA_DIR.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        media_url_exists = 'MEDIA_URL' in dir(settings)[m
+[31m-        self.assertTrue(media_url_exists, f"{FAILURE_HEADER}The setting MEDIA_URL has not been defined in settings.py.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-        media_url_value = settings.MEDIA_URL[m
+[31m-        self.assertEqual('/media/', media_url_value, f"{FAILURE_HEADER}Your value of the MEDIA_URL setting does not equal /media/. Check your settings!{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_context_processor_addition(self):[m
+[31m-        """[m
+[31m-        Checks to see whether the media context_processor has been added to your project's settings module.[m
+[31m-        """[m
+[31m-        context_processors_list = settings.TEMPLATES[0]['OPTIONS']['context_processors'][m
+[31m-        self.assertTrue('django.template.context_processors.media' in context_processors_list, f"{FAILURE_HEADER}The 'django.template.context_processors.media' context processor was not included. Check your settings.py module.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-[m
+[31m-class Chapter4ExerciseTests(TestCase):[m
+[31m-    """[m
+[31m-    A series of tests to ensure that the exercise listing at the end of Chapter 4 has been completed.[m
+[31m-    """[m
+[31m-    def setUp(self):[m
+[31m-        self.project_base_dir = os.getcwd()[m
+[31m-        self.template_dir = os.path.join(self.project_base_dir, 'templates', 'rango')[m
+[31m-        self.about_response = self.client.get(reverse('rango:about'))[m
+[31m-    [m
+[31m-    def test_about_template_exists(self):[m
+[31m-        """[m
+[31m-        Tests the about template -- if it exists, and whether or not the about() view makes use of it.[m
+[31m-        """[m
+[31m-        template_exists = os.path.isfile(os.path.join(self.template_dir, 'about.html'))[m
+[31m-        self.assertTrue(template_exists, f"{FAILURE_HEADER}The about.html template was not found in the expected location.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_about_uses_template(self):[m
+[31m-        """[m
+[31m-        Checks whether the index view uses a template -- and the correct one![m
+[31m-        """[m
+[31m-        self.assertTemplateUsed(self.about_response, 'rango/about.html', f"{FAILURE_HEADER}The about() view does not use the about.html template.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_about_starts_with_doctype(self):[m
+[31m-        """[m
+[31m-        Is the <!DOCTYPE html> declaration on the first line of the about.html template?[m
+[31m-        """[m
+[31m-        self.assertTrue(self.about_response.content.decode().startswith('<!DOCTYPE html>'), f"{FAILURE_HEADER}Your about.html template does not start with <!DOCTYPE html> -- this is requirement of the HTML specification.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_about_contains_required_text(self):[m
+[31m-        """[m
+[31m-        Checks to see whether the required text is on the rendered about page.[m
+[31m-        """[m
+[31m-        required = [[m
+[31m-            "here is the about page.",[m
+[31m-            "This tutorial has been put together by "[m
+[31m-        ][m
+[31m-        [m
+[31m-        for required_str in required:[m
+[31m-            self.assertTrue(required_str in self.about_response.content.decode(), f"{FAILURE_HEADER}The expected string '{required_str}' was not found in the rendered /rango/about/ response.{FAILURE_FOOTER}")[m
+[31m-    [m
+[31m-    def test_about_contains_rango(self):[m
+[31m-        """[m
+[31m-        Checks whether the rendered about view has the picture of Rango.[m
+[31m-        """[m
+[31m-        required_str = f"<img src=\"{settings.STATIC_URL}images/rango.jpg\" alt=\"Picture of Rango\" />"[m
+[31m-        self.assertTrue(required_str in self.about_response.content.decode(), f"{FAILURE_HEADER}The HTML markup to include the image of Rango in the about template was not found. It needs to match exactly what we are looking for. Check the book.{FAILURE_FOOTER}")[m
+[31m-        [m
+[31m-    def test_about_contains_cat(self):[m
+[31m-        """[m
+[31m-        Checks whether the rendered about view has the picture of a cat.[m
+[31m-        We need to be a little bit lenient here as the example above includes a period, and in the exercise instructions, the required alt text is ended with a period. Either with or without is acceptable.[m
+[31m-        """[m
+[31m-        required_pattern = f"<img src=\"{settings.MEDIA_URL}cat.jpg\" alt=\"Picture of a Cat.?\" />"[m
+[31m-        self.assertTrue(re.search(required_pattern, self.about_response.content.decode()), f"{FAILURE_HEADER}The HTML markup to include the image of a cat in the about template was not found. It needs to match exactly what we are looking for. Check the book.{FAILURE_FOOTER}")[m
+\ No newline at end of file[m
